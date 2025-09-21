@@ -1,18 +1,26 @@
 #!/usr/bin/env bash
+# exit on error
 set -o errexit
 
 echo "🚀 Starting deployment process..."
 
+# Render-optimized Chrome installation with caching
 STORAGE_DIR=/opt/render/project/.render
 
 if [[ ! -d $STORAGE_DIR/chrome ]]; then
     echo "📦 Downloading Chrome..."
     mkdir -p $STORAGE_DIR/chrome
+    
+    # Save current directory
+    ORIGINAL_DIR=$(pwd)
+    
     cd $STORAGE_DIR/chrome
     wget -P ./ https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
     dpkg -x ./google-chrome-stable_current_amd64.deb $STORAGE_DIR/chrome
     rm ./google-chrome-stable_current_amd64.deb
-    cd $HOME/project/src
+    
+    # Return to original directory
+    cd $ORIGINAL_DIR
     echo "✅ Chrome downloaded and extracted"
 else
     echo "✅ Using Chrome from cache"
@@ -39,6 +47,7 @@ apt-get install -y \
     unzip \
     curl
 
+# Clean up apt cache
 rm -rf /var/lib/apt/lists/*
 
 echo "✅ Chrome dependencies installed"
