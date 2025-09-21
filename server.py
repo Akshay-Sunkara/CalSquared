@@ -33,21 +33,37 @@ if not OPENAI_API_KEY:
     raise ValueError("❌ OPENAI_API_KEY is not set. Please configure it as an environment variable.")
 
 def setup_chrome_driver():
-    """Setup Chrome driver with proper options"""
+    """Setup Chrome driver with proper options for Render deployment"""
     print("🚀 Setting up Chrome driver...")
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Run in background
+    
+    chrome_binary_path = "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome"
+    if os.path.exists(chrome_binary_path):
+        chrome_options.binary_location = chrome_binary_path
+        print(f"✅ Using Chrome binary from: {chrome_binary_path}")
+    else:
+        print("⚠️ Using system Chrome binary")
+    
+    chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-software-rasterizer")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-plugins")
+    chrome_options.add_argument("--disable-images")
     chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--remote-debugging-port=9222")
     chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+    
+    chrome_options.add_argument("--max_old_space_size=4096")
+    chrome_options.add_argument("--disable-background-timer-throttling")
+    chrome_options.add_argument("--disable-backgrounding-occluded-windows")
+    chrome_options.add_argument("--disable-renderer-backgrounding")
 
     try:
-        driver = webdriver.Chrome(
-            service=ChromeService(ChromeDriverManager().install()),
-            options=chrome_options
-        )
+        service = ChromeService(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
         print("✅ Chrome driver setup successful")
         return driver
     except Exception as e:
