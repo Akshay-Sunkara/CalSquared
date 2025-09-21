@@ -1,18 +1,27 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -o errexit
 
 echo "🚀 Starting deployment process..."
 
-echo "📦 Installing system dependencies and Google Chrome..."
+STORAGE_DIR=/opt/render/project/.render
+
+if [[ ! -d $STORAGE_DIR/chrome ]]; then
+    echo "📦 Downloading Chrome..."
+    mkdir -p $STORAGE_DIR/chrome
+    cd $STORAGE_DIR/chrome
+    wget -P ./ https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    dpkg -x ./google-chrome-stable_current_amd64.deb $STORAGE_DIR/chrome
+    rm ./google-chrome-stable_current_amd64.deb
+    cd $HOME/project/src
+    echo "✅ Chrome downloaded and extracted"
+else
+    echo "✅ Using Chrome from cache"
+fi
+
+export PATH="${PATH}:/opt/render/project/.render/chrome/opt/google/chrome"
+
+echo "🌐 Installing Chrome dependencies..."
 apt-get update
-
-apt-get install -y wget gnupg unzip curl
-
-wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
-
-apt-get update
-apt-get install -y google-chrome-stable
-
 apt-get install -y \
     fonts-liberation \
     libasound2 \
@@ -24,15 +33,18 @@ apt-get install -y \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
-    xdg-utils
+    xdg-utils \
+    wget \
+    gnupg \
+    unzip \
+    curl
 
 rm -rf /var/lib/apt/lists/*
 
-echo "✅ Chrome installation completed"
+echo "✅ Chrome dependencies installed"
 
 echo "🐍 Installing Python dependencies..."
 pip3 install --no-cache-dir -r requirements.txt
-
 echo "✅ Python dependencies installed"
 
 echo "🚀 Starting Python server..."
